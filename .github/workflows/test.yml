@@ -43,18 +43,15 @@ jobs:
 
       - name: Run unit tests
         run: |
-          cd pipeline-service
           python -m pytest tests/test_unit/ -v --tb=short
 
       - name: Run integration tests
         run: |
-          cd pipeline-service
           DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
           python -m pytest tests/test_integration/ -v --tb=short
 
       - name: Run E2E tests
         run: |
-          cd pipeline-service
           python -m pytest tests/test_e2e/ -v --tb=short
 
   large-data-test:
@@ -108,7 +105,6 @@ jobs:
 
       - name: Test large data ingestion (10K)
         run: |
-          cd pipeline-service
           DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
           MOCK_SERVER_URL="http://localhost:5000" \
           python -c "
