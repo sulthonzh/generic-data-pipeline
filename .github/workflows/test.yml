@@ -178,11 +178,12 @@ jobs:
                       json={"size": 10000, "batch_size": 5000})
                   resp.raise_for_status()
                   result = orjson.loads(resp.content)
-                  print(f"Status: {result['status']}")
-                  print(f"Records: {result['records_processed']}")
+                  print("Status:", result.get("status"))
+                  print("Records:", result.get("records_processed"))
                   if result.get("performance"):
-                      print(f"Time: {result['performance']['total_time_seconds']}s")
-                      print(f"Speed: {result['performance']['records_per_second']} rec/s")
+                      perf = result["performance"]
+                      print("Time:", perf.get("total_time_seconds"), "s")
+                      print("Speed:", perf.get("records_per_second"), "rec/s")
           asyncio.run(test_large_ingest())
           '
 
