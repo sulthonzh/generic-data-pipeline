@@ -45,7 +45,7 @@ class IngestionService:
 
         while True:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                url = "http://mock-server:5000/api/customers/large"
+                url = f"{settings.mock_server_url}/api/customers/large"
                 resp = await client.get(url, params={
                     "size": size,
                     "batch": batch_size,
