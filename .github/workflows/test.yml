@@ -107,25 +107,22 @@ jobs:
         run: |
           DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
           MOCK_SERVER_URL="http://localhost:5000" \
-          python -c "
-import asyncio
-import httpx
-import orjson
-
-async def test_large_ingest():
-    async with httpx.AsyncClient(timeout=300) as client:
-        resp = await client.post('http://localhost:8000/api/ingest/large',
-            json={'size': 10000, 'batch_size': 5000})
-        resp.raise_for_status()
-        result = orjson.loads(resp.content)
-        print(f'Status: {result[\"status\"]}')
-        print(f'Records: {result[\"records_processed\"]}')
-        if result.get('performance'):
-            print(f'Time: {result[\"performance\"][\"total_time_seconds\"]}s')
-            print(f'Speed: {result[\"performance\"][\"records_per_second\"]} rec/s')
-
-asyncio.run(test_large_ingest())
-"
+          python -c 'import asyncio
+          import httpx
+          import orjson
+          async def test_large_ingest():
+              async with httpx.AsyncClient(timeout=300) as client:
+                  resp = await client.post("http://localhost:8000/api/ingest/large",
+                      json={"size": 10000, "batch_size": 5000})
+                  resp.raise_for_status()
+                  result = orjson.loads(resp.content)
+                  print(f"Status: {result['status']}")
+                  print(f"Records: {result['records_processed']}")
+                  if result.get("performance"):
+                      print(f"Time: {result['performance']['total_time_seconds']}s")
+                      print(f"Speed: {result['performance']['records_per_second']} rec/s")
+          asyncio.run(test_large_ingest())
+          '
 
       - name: Verify database count
         run: |
