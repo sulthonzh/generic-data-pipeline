@@ -1,0 +1,33 @@
+# Environment
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+htmlcov/
+.coverage
+.venv/
+venv/
+test.db
+*.db
+.DS_Store
+dist/
+build/
+*.egg-info/
+
+# Documentation (exclude all md except README.md)
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude
+.claude/
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: customer-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mock-server:
+    build: ./mock-server
+    container_name: flask-mock-server
+    ports:
+      - "5001:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./mock-server/data:/app/data
+    env_file:
+      - .env
+    environment:
+      - FLASK_ENV=${FLASK_ENV}
+      - FLASK_APP=app.py
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  pipeline-service:
+    build: ./pipeline-service
+    container_name: fastapi-pipeline
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-server:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MOCK_SERVER_URL=${MOCK_SERVER_URL}
+      - WORKERS=${WORKERS}
+      - LOG_LEVEL=${LOG_LEVEL}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
