@@ -56,3 +56,81 @@ jobs:
         run: |
           cd pipeline-service
           python -m pytest tests/test_e2e/ -v --tb=short
+
+  large-data-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: customer_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r pipeline-service/requirements.txt
+          pip install -r mock-server/requirements.txt
+
+      - name: Start Flask mock server
+        run: |
+          cd mock-server
+          gunicorn --bind 0.0.0.0:5000 --workers 2 --daemon app:app
+          sleep 5
+
+      - name: Test large data generation (10K)
+        run: |
+          curl -s "http://localhost:5000/api/customers/large?size=10000&batch=5000&page=1" | jq '.performance'
+
+      - name: Test performance endpoint (100K)
+        run: |
+          curl -s "http://localhost:5000/api/performance/test?size=100000" | jq '.results.records_per_second'
+
+      - name: Test large data ingestion (10K)
+        run: |
+          cd pipeline-service
+          DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
+          MOCK_SERVER_URL="http://localhost:5000" \
+          python -c "
+import asyncio
+import httpx
+import orjson
+
+async def test_large_ingest():
+    async with httpx.AsyncClient(timeout=300) as client:
+        resp = await client.post('http://localhost:8000/api/ingest/large',
+            json={'size': 10000, 'batch_size': 5000})
+        resp.raise_for_status()
+        result = orjson.loads(resp.content)
+        print(f'Status: {result[\"status\"]}')
+        print(f'Records: {result[\"records_processed\"]}')
+        if result.get('performance'):
+            print(f'Time: {result[\"performance\"][\"total_time_seconds\"]}s')
+            print(f'Speed: {result[\"performance\"][\"records_per_second\"]} rec/s')
+
+asyncio.run(test_large_ingest())
+"
+
+      - name: Verify database count
+        run: |
+          PGPASSWORD=password psql -h localhost -U postgres -d customer_db -c "SELECT COUNT(*) FROM customers;"
