@@ -95,8 +95,8 @@ jobs:
       - name: Start FastAPI pipeline service
         run: |
           cd pipeline-service
-          DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
-          MOCK_SERVER_URL="http://localhost:5000" \
+          export DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db"
+          export MOCK_SERVER_URL="http://localhost:5000"
           uvicorn main:app --host 0.0.0.0 --port 8000 &
           sleep 5
 
@@ -152,8 +152,8 @@ jobs:
       - name: Start FastAPI pipeline service
         run: |
           cd pipeline-service
-          DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db" \
-          MOCK_SERVER_URL="http://localhost:5000" \
+          export DATABASE_URL="postgresql://postgres:password@localhost:5432/customer_db"
+          export MOCK_SERVER_URL="http://localhost:5000"
           uvicorn main:app --host 0.0.0.0 --port 8000 &
           sleep 5
 

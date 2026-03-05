@@ -1,68 +1,41 @@
 import pytest
-import subprocess
-import time
 import httpx
-import orjson
 import os
-import shutil
+import time
 
 
-def _is_ci():
-    """Check if running in CI environment."""
-    return os.getenv("CI") is not None
+@pytest.mark.e2e
+class TestPipelineE2ECI:
+    """E2E tests that run in CI with pre-started services."""
 
+    @pytest.fixture(autouse=True)
+    def wait_for_services(self):
+        """Wait a moment for services to be ready."""
+        time.sleep(2)
+        yield
 
-# Skip entire test class in CI since services are started by workflow
-pytestmark = pytest.mark.skipif(
-    _is_ci(),
-    reason="Tests run in CI with pre-started services"
-)
-
-
-@pytest.fixture(scope="module")
-def docker_compose_setup():
-    """Setup docker-compose only for local development."""
-    subprocess.run(
-        ["docker-compose", "up", "-d"],
-        cwd="/Users/sulthonzh/Data/projects/quadbyte/acumen-strategy/assesment",
-        capture_output=True
-    )
-    time.sleep(10)
-    yield
-    subprocess.run(
-        ["docker-compose", "down"],
-        cwd="/Users/sulthonzh/Data/projects/quadbyte/acumen-strategy/assesment",
-        capture_output=True
-    )
-
-
-class TestPipelineE2E:
-    @pytest.mark.e2e
-    def test_mock_server_health(self, docker_compose_setup):
-        mock_url = os.getenv("MOCK_SERVER_URL", "http://localhost:5001")
+    def test_mock_server_health(self):
+        mock_url = os.getenv("MOCK_SERVER_URL", "http://localhost:5000")
         response = httpx.get(f"{mock_url}/api/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
 
-    @pytest.mark.e2e
-    def test_mock_server_customers(self, docker_compose_setup):
-        mock_url = os.getenv("MOCK_SERVER_URL", "http://localhost:5001")
+    def test_mock_server_customers(self):
+        mock_url = os.getenv("MOCK_SERVER_URL", "http://localhost:5000")
         response = httpx.get(f"{mock_url}/api/customers")
         assert response.status_code == 200
         data = response.json()
         assert data["total"] > 20
 
-    @pytest.mark.e2e
-    def test_pipeline_service_health(self, docker_compose_setup):
+    def test_pipeline_service_health(self):
         pipeline_url = os.getenv("PIPELINE_SERVICE_URL", "http://localhost:8000")
         response = httpx.get(f"{pipeline_url}/api/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
 
-    @pytest.mark.e2e
-    def test_full_pipeline_ingestion(self, docker_compose_setup):
+    def test_full_pipeline_ingestion(self):
         pipeline_url = os.getenv("PIPELINE_SERVICE_URL", "http://localhost:8000")
         response = httpx.post(f"{pipeline_url}/api/ingest")
         assert response.status_code == 200
@@ -70,8 +43,7 @@ class TestPipelineE2E:
         assert data["status"] == "success"
         assert data["records_processed"] > 0
 
-    @pytest.mark.e2e
-    def test_retrieve_customers_after_ingestion(self, docker_compose_setup):
+    def test_retrieve_customers_after_ingestion(self):
         pipeline_url = os.getenv("PIPELINE_SERVICE_URL", "http://localhost:8000")
         httpx.post(f"{pipeline_url}/api/ingest")
         time.sleep(1)
@@ -82,8 +54,7 @@ class TestPipelineE2E:
         assert data["total"] > 0
         assert len(data["data"]) > 0
 
-    @pytest.mark.e2e
-    def test_get_specific_customer(self, docker_compose_setup):
+    def test_get_specific_customer(self):
         pipeline_url = os.getenv("PIPELINE_SERVICE_URL", "http://localhost:8000")
         httpx.post(f"{pipeline_url}/api/ingest")
         time.sleep(1)
