@@ -31,3 +31,4 @@ build/
 # Logs
 *.log
 logs/
+node_modules/
