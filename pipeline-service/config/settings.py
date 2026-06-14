@@ -1,7 +1,5 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field, validator
-from typing import Optional
-import os
 
 
 class Settings(BaseSettings):

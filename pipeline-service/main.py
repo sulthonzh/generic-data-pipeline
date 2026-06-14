@@ -3,11 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 
 from config import settings
 from database import get_db, init_db
-from models.customer import Customer
 from models.schemas import (
     CustomerResponse,
     PaginatedResponse,

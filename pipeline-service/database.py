@@ -23,7 +23,6 @@ def get_db():
 
 
 def init_db():
-    from models.customer import Customer
     Base.metadata.create_all(bind=engine)
 
 
