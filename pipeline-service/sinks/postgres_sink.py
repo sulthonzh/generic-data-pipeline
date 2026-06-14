@@ -1,9 +1,7 @@
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
-from database import get_db
 from repositories.customer import CustomerRepository
 from sinks.base import DataSink
-from datetime import datetime, timezone
 
 
 class PostgresSink(DataSink):

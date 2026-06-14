@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from sources.base import DataSource
 from sinks.base import DataSink
 from models.schemas import IngestResponse

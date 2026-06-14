@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 from sources.http_source import MockServerSource
 from sinks.postgres_sink import PostgresSink
