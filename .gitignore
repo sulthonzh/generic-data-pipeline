@@ -32,3 +32,6 @@ build/
 *.log
 logs/
 node_modules/
+
+# Python cache
+.mypy_cache/
